@@ -1,86 +1,99 @@
-# Code written by Jerin Rajan on 27th Jan 2019
-
 import random
 from masscost import mass
 
-
-size_of_tl = 10
-i = 0;
+# Sample Data Set
 # X - set of feasible solutions
 # Dimension of our metal plate (in mm) l: length, b: breadth, h: height
 l = 100
 b = 50
 h = 15
 X = [l,b,h]
-mass_X, cost_X = mass(l,b,h)
-print('Mass of the item:', mass_X)
+cost_X = mass(l,b,h)
 print('Cost of metal:', cost_X)
 
 # defining a tabu list
 tl = list()
+# For loop iteration item handler initialisation
+i = 0;
+# Maximium size of the Tabu list
+max_tl = 10
+# Cost Function threhdold
+cost_threshold = 50
 
-# Step0
-# Initialising tabu list to empty
-tl = []
-# Aspiration criteria to be Zero
-ac = 0
 
 #Step1
 # Set Iteration counter
-k = True
+k = 0
 
-# Initial Solution - generated randomly
-# xl = random.randint(0,l)
-# xb = random.randint(0,b)
-# xh = random.randint(0,h)
-# print('Random dimensions:',xl,xb,xh)
-x = [random.randint(0,l),random.randint(0,b),random.randint(0,h)]
-print('Random dimensions:',x[0],x[1],x[2])
+# Initial Solution - generated randomly - assuming best solution seen to date.
+s0 = [random.randint(1,l),random.randint(1,b),random.randint(1,h)]
+print('Random dimensions:',s0[0],s0[1],s0[2])
+# Best Mass value initialisation
+best_mass = mass(s0[0],s0[1],s0[2])
+# best_mass =
+print('Initial Best mass:',best_mass)
 
-while k is True:
-    xb = x
 
-    # Step2:
-    # Trial solutions in neighbourhood
-    sneigh = [[x[0]-1,x[1],x[2]],[x[0]+1,x[1],x[2]],[x[0],x[1]-1,x[2]],[x[0],x[1]+1,x[2]],[x[0],x[1],x[2]-1],[x[0],x[1],x[2]+1]]
+sbest = s0
+bestCandidate = s0
+
+# Initialising the tabu list with x
+tl.append(s0)
+
+while not (k == 20 ):
+# Step2:
+# Trial solutions in neighbourhood (Candidate List)
+    s0 = sbest
+    sneigh = [[s0[0]-1,s0[1],s0[2]],[s0[0]+1,s0[1],s0[2]],
+            [s0[0],s0[1]-1,s0[2]],[s0[0],s0[1]+1,s0[2]],
+            [s0[0],s0[1],s0[2]-1],[s0[0],s0[1],s0[2]+1]]
     print('Trial Solutions:',sneigh)
 
     for i in range(len(sneigh)):
-        xnb = sneigh[i][0],sneigh[i][1],sneigh[i][2]
-        print('xnb values:',xnb)
-        e_xnb = mass(sneigh[i][0],sneigh[i][1],sneigh[i][2])
-        print('e_xnb:',e_xnb)
-        print('xb values:',xb[0],xb[1],xb[2])
-        e_xb = mass(xb[0],xb[1],xb[2])
-        print('e_xb:',e_xb)
-    # Step 3 - comparing the objective functions
-        if e_xnb < e_xb:
-            xb = xnb
-            print('new xb:',xb)
-    # Step 4 - Perform the Tabu test
-        else:
-            print('Go to step 4 perform tabu test')
-            if xnb not in tl:
-                # Accept xnb as current solution
-                x = xnb
-                # Update TL
-                tl.append(xnb)
-                # Update AC
-                # print('Tabu List:',tl)
-                # Step 6 - Perform termination test.
-                print('Go to Step 6, Perform terminatation test')
-                length_tl = len(tl)
-                if length_tl < size_of_tl:
-                    k = True
-                else:
-                    k = False
-                    break
-# Step 5 Perform the AC test
-            else:
-                print('Go to Step 5 - Perform AC test')
-                
+        # if sneigh[i][0] <= 0:
+        #     continue
+        # elif sneigh[i][1] <= 0:
+        #     continue
+        # elif sneigh[2] <= 0:
+        #     continue
 
-best_sol = tl[size_of_tl-1]
-print('Tabu List:',tl)
-print('Best Solution:', best_sol)
-print('Cost:', mass(best_sol[0],best_sol[1],best_sol[2]))
+        sCandidate = sneigh[i][0],sneigh[i][1],sneigh[i][2]
+        print('sCandidate:',sCandidate)
+
+        if sCandidate[0]<=0:
+            continue
+        elif sCandidate[1]<=0:
+            continue
+        elif sCandidate[2]<=0:
+            continue
+        else:
+            e_sCandidate = mass(sCandidate[0],
+                    sCandidate[1],sCandidate[2])
+            print('e_sCandidate:',e_sCandidate)
+            print('bestCandidate:',bestCandidate[0],
+                    bestCandidate[1],bestCandidate[2])
+            e_bestCandidate = mass(bestCandidate[0],
+                    bestCandidate[1],bestCandidate[2])
+            print('e_bestCandidate:',e_bestCandidate)
+            # Tabu Test
+            if (not sCandidate in tl) and (e_sCandidate < e_bestCandidate):
+                bestCandidate = sCandidate
+                print('bestCandidate:',bestCandidate)
+
+    e_sbest = mass(sbest[0],sbest[1],sbest[2])
+    print('e_sbest:',e_sbest)
+
+    # Acceptance Criterion Test
+    if e_bestCandidate < e_sbest:
+        sbest = bestCandidate
+        best_mass = mass(sbest[0],sbest[1],sbest[2])
+        print('sbest:',sbest)
+        print('sbestMass:', best_mass)
+
+    tl.append(sbest)
+    print('tl:',tl)
+    if len(tl)>max_tl:
+        tl.pop(0)
+    k = k+1
+print("Optimal Candidate:",sbest)
+print("optimalCost", best_mass)
